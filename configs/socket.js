@@ -32,7 +32,3 @@ function calculateDistance(loc1, loc2) {
     // Hàm tính khoảng cách giữa 2 tọa độ (sử dụng công thức Haversine)
     // Trả về khoảng cách bằng mét
 }
-
-server.listen(3000, () => {
-    console.log('Server is listening on port 3000');
-});
