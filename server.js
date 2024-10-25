@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const connectDB = require('./configs/db');
 const authRoutes = require("./routes/authRoute")
+const potholeRoutes = require("./routes/potholeRoute")
 dotenv.config();
 
 const app = express();
@@ -12,9 +13,9 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors()); // Gọi hàm cors()
-app.use(cookieParser()); // Gọi hàm cookieParser()
-app.use(express.json()); // Gọi hàm express.json() để parse JSON
+app.use(cors());
+app.use(cookieParser());
+app.use(express.json());
 
 // Test Route
 app.get('/', (req, res) => {
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/potholes', potholeRoutes);
 
 const PORT = process.env.PORT || 8000;
 
