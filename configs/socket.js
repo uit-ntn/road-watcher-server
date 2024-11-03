@@ -1,34 +1,38 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
+const WebSocket = require("ws");
+const Pothole = require("../models/Pothole");
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const setupWebSocket = (server) => {
+    const wss = new WebSocket.Server({ server });
 
-// Danh sách ổ gà (mock data)
-const potholes = [
-    { id: 1, longitude: -73.935242, latitude: 40.730610 },
-    { id: 2, longitude: -73.935242, latitude: 40.731000 }
-];
+    wss.on("connection", (ws) => {
+        console.log("Client connected");
 
-wss.on('connection', (ws) => {
-    console.log('Client connected');
+        ws.on("message", async (message) => {
+            try {
+                const data = JSON.parse(message);
+                const { latitude, longitude } = data;
 
-    ws.on('message', (message) => {
-        const userLocation = JSON.parse(message);
+                // Look for pothole near by client 
+                const nearbyPotholes = await Pothole.find({
+                    latitude: { $gte: latitude - 0.0001, $lte: latitude + 0.0001 },
+                    longitude: { $gte: longitude - 0.0001, $lte: longitude + 0.0001 }
+                });
 
-        // Tính khoảng cách giữa người dùng và ổ gà (ví dụ dùng hàm Haversine)
-        potholes.forEach(pothole => {
-            const distance = calculateDistance(userLocation, pothole);
-            if (distance < 100) { // nếu cách ổ gà dưới 100m
-                ws.send(JSON.stringify({ warning: "Pothole nearby!", pothole }));
+                if (nearbyPotholes.length > 0) {
+                    ws.send(JSON.stringify({ found: true, potholes: nearbyPotholes }));
+                } else {
+                    ws.send(JSON.stringify({ found: false }));
+                }
+            } catch (error) {
+                console.error("Error processing location data", error);
+                ws.send(JSON.stringify({ error: "Error processing location data" }));
             }
         });
-    });
-});
 
-function calculateDistance(loc1, loc2) {
-    // Hàm tính khoảng cách giữa 2 tọa độ (sử dụng công thức Haversine)
-    // Trả về khoảng cách bằng mét
-}
+        ws.on("close", () => {
+            console.log("Client disconnected");
+        });
+    });
+};
+
+module.exports = setupWebSocket;
