@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const nodemailer = require('nodemailer');
+const sendEmail = require('../configs/mailer');
 
 // Sign up
 exports.signup = async (req, res) => {
@@ -57,7 +59,6 @@ exports.login = async (req, res) => {
     }
 };
 
-// Forgot Password
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
@@ -65,36 +66,27 @@ exports.forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
+ 
+        // Generate a new random password
+        const newPassword = Math.random().toString(36).slice(-8);
 
-        // Token reset password 
-        const resetToken = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Hash password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
 
-        // Link to save password
-        const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+        // Send password to email
+        const subject = 'Road Watcher - Your New Password';
+        const text = `Your new password is: ${newPassword}. Please log in and change your password immediately.`;
 
-        // Config Nodemailer
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS  
-            }
-        });
+        await sendEmail(email, subject, text);
 
-        // send email
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Password Reset Request',
-            html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`
-        });
-
-        res.json({ msg: 'Password reset link has been sent to your email' });
+        res.json({ msg: 'New password has been sent to your email' });
     } catch (error) {
+        console.error('Error in forgotPassword:', error);
         res.status(500).json({ msg: 'Server error' });
     }
 };
-
 
 // Reset Password
 exports.resetPassword = async (req, res) => {
