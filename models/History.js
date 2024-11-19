@@ -5,8 +5,8 @@ const HistorySchema = mongoose.Schema({
     pothole_id: { type: String, unique: true, required: true },
     status: { type: String, required: true },
     last_updated: { type: Date, required: true },
-    longitude: { type: Float64Array, required: true },
-    latitude: { type: Float64Array, required: true },
+    longitude: { type: Number, required: true },
+    latitude: { type: Number, required: true },
     severity: { type: String, required: true }
 })
 
