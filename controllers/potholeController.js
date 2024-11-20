@@ -1,4 +1,6 @@
 const Pothole = require('../models/Pothole');
+const { processSensorData } = require('../services/sensorProcessing');
+const { detectPotholes } = require('../services/potholeDetection');
 
 // Create Pothole
 exports.createPothole = async (req, res) => {
@@ -82,5 +84,26 @@ exports.checkPotholeByCoordinates = async (req, res) => {
         res.json({ found: false });
     } catch (error) {
         res.status(500).json({ message: 'Error checking potholes', error });
+    }
+};
+
+
+
+exports.detectPotholeFromSensor = async (req, res) => {
+    try {
+        const rawSensorData = req.body.sensorData;
+
+       // handle data from sensor
+        const processedData = processSensorData(rawSensorData);
+
+        // detect potholes
+        const potholes = detectPotholes(processedData);
+
+        res.status(200).json({
+            message: 'Pothole detection complete',
+            potholes,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error detecting potholes', error });
     }
 };
