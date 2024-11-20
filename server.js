@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoute");
 const potholeRoutes = require("./routes/potholeRoute");
 const mapRoutes = require("./routes/mapRoute");
 const historyRoutes = require("./routes/historyRoute");
-const navigationRoutes = require("./controllers/navigationController")
+const navigationRoutes = require("./routes/navigationRoute")
 
 
 dotenv.config();
