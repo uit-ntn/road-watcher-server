@@ -20,4 +20,8 @@ router.delete('/:id', potholeController.deletePothole);
 // Check Pothole by GPS Coordinates
 router.post('/check', potholeController.checkPotholeByCoordinates);
 
+// Detect Potholes
+router.post('/detect', potholeController.detectPotholeFromSensor);
+
+
 module.exports = router;
