@@ -1,5 +1,5 @@
 const Pothole = require('../models/Pothole');
-const { findSafeRoute } = require('../services/navigation');
+const { findSafeRoute } = require('../services/navigationService');
 
 exports.getSafeRoute = async (req, res) => {
     try {
