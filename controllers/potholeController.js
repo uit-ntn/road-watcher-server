@@ -1,6 +1,6 @@
 const Pothole = require('../models/Pothole');
-const { processSensorData } = require('../services/sensorProcessing');
-const { detectPotholes } = require('../services/potholeDetection');
+const { processSensorData } = require('../services/sensorProcessingService');
+const { detectPotholes } = require('../services/potholesDetectionService');
 
 // Create Pothole
 exports.createPothole = async (req, res) => {
