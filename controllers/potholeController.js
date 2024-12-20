@@ -210,3 +210,20 @@ exports.getPotholesBySeverity = async (req, res) => {
         res.status(500).json({ message: 'Error fetching potholes by severity', error: err });
     }
 };
+
+
+exports.confirmPothole = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const pothole = await Pothole.findById(id);
+      if (!pothole) {
+        return res.status(404).json({ message: 'Pothole not found' });
+      }
+      pothole.confirmed_by_user = true;
+      await pothole.save();
+      res.status(200).json({ message: 'Pothole confirmed successfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Error confirming pothole', error: err });
+    }
+  };
+  

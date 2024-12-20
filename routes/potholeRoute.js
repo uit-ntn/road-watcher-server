@@ -34,4 +34,6 @@ router.get('/statistics/month', potholeController.getPotholesByMonth);
 
 router.get('/severity/:level', potholeController.getPotholesBySeverity);
 
+router.put('/:id/confirm', potholeController.confirmPothole);
+
 module.exports = router;
