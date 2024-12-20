@@ -23,5 +23,17 @@ router.post('/check', potholeController.checkPotholeByCoordinates);
 // Detect Potholes
 router.post('/detect', potholeController.detectPotholeFromSensor);
 
+// Get potholes statistics by day
+router.get('/statistics/day', potholeController.getPotholesByDay);
+
+// Get potholes statistics by week
+router.get('/statistics/week', potholeController.getPotholesByWeek);
+
+// Get potholes statistics by month
+router.get('/statistics/month', potholeController.getPotholesByMonth);
+
+router.get('/severity/:level', potholeController.getPotholesBySeverity);
+
+router.put('/:id/confirm', potholeController.confirmPothole);
 
 module.exports = router;
