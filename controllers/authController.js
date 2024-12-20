@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const nodemailer = require('nodemailer');
 const sendEmail = require('../configs/mailer');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 
 // Sign up
 exports.signup = async (req, res) => {
@@ -66,7 +69,7 @@ exports.forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
- 
+
         // Generate a new random password
         const newPassword = Math.random().toString(36).slice(-8);
 
@@ -114,5 +117,70 @@ exports.resetPassword = async (req, res) => {
         }
         res.status(500).json({ msg: 'Server error' });
     }
+};
+
+// Passport Configuration for Google Strategy
+passport.use(
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: '/auth/google/callback',
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            const { id, displayName, emails } = profile;
+            try {
+                // Find user by Google ID or email
+                let user = await User.findOne({ $or: [{ googleId: id }, { email: emails[0].value }] });
+
+                if (!user) {
+                    // If user does not exist, create new user
+                    user = new User({
+                        user_id: `user_${new Date().getTime()}`,
+                        googleId: id,
+                        name: displayName,
+                        email: emails[0].value,
+                    });
+                    await user.save();
+                }
+
+                // Generate JWT token
+                const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+                return done(null, { token, user_id: user.user_id });
+            } catch (error) {
+                return done(error, null);
+            }
+        }
+    )
+);
+
+// Serialize user to session
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+// Deserialize user from session
+passport.deserializeUser((user, done) => {
+    done(null, user);
+});
+
+// Google Login Route Handler
+exports.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] });
+
+// Google Callback Route Handler
+exports.googleCallback = (req, res, next) => {
+    passport.authenticate('google', (err, user, info) => {
+        if (err) {
+            console.error('Google Authentication Error:', err); 
+            return res.status(500).json({ msg: 'Google Authentication Error' });
+        }
+        if (!user) {
+            return res.status(401).json({ msg: 'No user found or authentication failed' });
+        }
+
+        // Successful login
+        res.json({ token: user.token, user_id: user.user_id });
+    })(req, res, next);
 };
 

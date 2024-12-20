@@ -41,6 +41,17 @@ const setupWebSocket = (server) => {
     });
 };
 
+
+// Khi có lỗi
+socket.onerror = (error) => {
+    console.error('WebSocket Error:', error);
+};
+
+// Khi kết nối bị đóng
+socket.onclose = () => {
+    console.log('WebSocket connection closed');
+};
+
 // Sent notification to all client
 const broadcastMessage = (message) => {
     clients.forEach((client) => {
@@ -49,5 +60,14 @@ const broadcastMessage = (message) => {
         }
     });
 };
+
+
+// Gửi dữ liệu từ client đến server
+const sendLocationData = (latitude, longitude) => {
+    const data = { latitude, longitude };
+    socket.send(JSON.stringify(data));
+};
+
+
 
 module.exports = { setupWebSocket, broadcastMessage };
