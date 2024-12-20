@@ -32,4 +32,6 @@ router.get('/statistics/week', potholeController.getPotholesByWeek);
 // Get potholes statistics by month
 router.get('/statistics/month', potholeController.getPotholesByMonth);
 
+router.get('/severity/:level', potholeController.getPotholesBySeverity);
+
 module.exports = router;
