@@ -119,6 +119,51 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
+
+// Get User by ID
+exports.getUserById = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const user = await User.findOne({ user_id: userId }, '-password'); // Exclude password field
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error('Error in getUserById:', error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+// Update User
+exports.updateUser = async (req, res) => {
+    const { userId } = req.params;
+    const { name, email, phone, address } = req.body;
+
+    try {
+        const user = await User.findOne({ user_id: userId });
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        // Update fields if provided
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+        if (address) user.address = address;
+
+        // Save updates to database
+        await user.save();
+
+        res.json({ msg: 'User updated successfully', user });
+    } catch (error) {
+        console.error('Error in updateUser:', error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+
 // Passport Configuration for Google Strategy
 passport.use(
     new GoogleStrategy(
