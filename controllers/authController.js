@@ -214,18 +214,34 @@ passport.deserializeUser((user, done) => {
 exports.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] });
 
 // Google Callback Route Handler
-exports.googleCallback = (req, res, next) => {
-    passport.authenticate('google', (err, user, info) => {
-        if (err) {
-            console.error('Google Authentication Error:', err); 
-            return res.status(500).json({ msg: 'Google Authentication Error' });
-        }
+exports.googleCallback = async (req, res) => {
+    const { idToken } = req.body;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const userId = payload['sub'];
+        const email = payload['email'];
+        const name = payload['name'];
+
+        let user = await User.findOne({ googleId: userId });
         if (!user) {
-            return res.status(401).json({ msg: 'No user found or authentication failed' });
+            user = new User({
+                user_id: `user_${new Date().getTime()}`,
+                googleId: userId,
+                name,
+                email,
+            });
+            await user.save();
         }
 
-        // Successful login
-        res.json({ token: user.token, user_id: user.user_id });
-    })(req, res, next);
+        const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        res.json({ token, user_id: user.user_id });
+    } catch (error) {
+        res.status(400).json({ msg: 'Invalid Google ID Token' });
+    }
 };
+
 
